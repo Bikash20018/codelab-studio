@@ -1,0 +1,13 @@
+# Build output
+build/
+dist/
+installer/
+*.spec
+
+# Bundled compiler (downloaded separately - see README)
+mingw64/
+mingw32/
+
+# Python
+__pycache__/
+*.py[cod]
