@@ -26,8 +26,15 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-PrivilegesRequiredOverridesAllowed=dialog
+; "commandline" is what makes /ALLUSERS and /CURRENTUSER work.  The Microsoft
+; Store runs this installer silently, where a per-machine install would need a
+; UAC prompt nobody can answer, so /CURRENTUSER has to be accepted.
+PrivilegesRequiredOverridesAllowed=commandline dialog
 ChangesAssociations=yes
+VersionInfoVersion={#AppVersion}
+VersionInfoCompany=Bikash Chhetri
+VersionInfoProductName={#AppName}
+VersionInfoDescription={#AppName} Setup
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Shortcuts:"
