@@ -52,21 +52,21 @@ build above is published by its distributor at:
 
     https://winlibs.com/
 
-and the matching source archive for this build is the one named
-    gcc-16.1.0-mingw-w64ucrt-14.0.0-r4
-on that site's download page.
+and the binary build used here is published at:
 
-In addition, and for as long as CodeLab Studio is distributed, a version-pinned
-copy of that source archive is kept available at:
+    https://github.com/brechtsanders/winlibs_mingw/releases/tag/16.1.0posix-14.0.0-ucrt-r4
 
-    https://www.bikashchhetri.com.np/codelab-studio/source
+Per-component source locations, pinned to the exact versions in this package,
+are listed at:
 
-    >>> ACTION REQUIRED BEFORE THE FIRST STORE SUBMISSION <<<
-    That page must exist and must serve the source archive matching the build
-    string above, at no charge, before the package is published. GPLv3 6(d)
-    permits pointing at a network server; it does not permit pointing at
-    "winlibs.com somewhere". Keep it reachable for as long as you distribute
-    this version, and cite the URL in the Microsoft Store description.
+    https://github.com/Bikash20018/codelab-studio/blob/main/SOURCE.md
+
+That page names each component, its version, and a direct upstream download for
+its corresponding source (GCC 16.1.0 from ftp.gnu.org, GDB 17.2 from
+sourceware.org, and so on). It is kept reachable for as long as this version is
+distributed. If a link there ever breaks, ask via
+https://www.bikashchhetri.com.np and the corresponding source for the version
+you received will be sent to you at no charge beyond the cost of delivery.
 
 
 2. clang-format (LLVM)

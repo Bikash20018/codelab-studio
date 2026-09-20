@@ -231,12 +231,15 @@ antimalware scan over roughly 12,900 bundled binaries.
   carries GPLv3, GPLv2, both LGPLs, the GCC Runtime Library Exception, the mingw-w64
   and LLVM texts, and a `THIRD-PARTY-NOTICES.txt` naming each component and version.
   It ships inside every build and Help > **Licences and Source Code** opens it.
-- **You owe the source, not just the license.** Conveying GCC/GDB binaries obliges you to
-  provide the corresponding source. Because Microsoft's CDN does the delivering, the
-  practical route is GPLv3 6(d): publish version-pinned download links to the exact WinLibs
-  source archives (the build string is in `mingw64\version_info.txt`) on your own site,
-  keep them reachable for as long as you distribute, and cite that URL in the Store
-  description and in the app. "It is on winlibs.com somewhere" does not satisfy it.
+- **You owe the source, not just the license — answered by [SOURCE.md](SOURCE.md).**
+  Conveying GCC/GDB binaries obliges you to provide the corresponding source. Since
+  Microsoft's CDN does the delivering, the practical route is GPLv3 6(d): clear directions
+  next to the binaries pointing at the source. `SOURCE.md` names every bundled component,
+  its exact version and a direct upstream download (GCC 16.1.0 from ftp.gnu.org, GDB 17.2
+  from sourceware.org, the WinLibs `16.1.0posix-14.0.0-ucrt-r4` build it all came from),
+  and `licenses\THIRD-PARTY-NOTICES.txt` inside the app points at it. Keep that page
+  reachable for as long as you ship this version and cite it in the Store description.
+  "It is on winlibs.com somewhere" does not satisfy it.
 - **GPL versus store terms is unsettled.** The Store's terms restrict what end users may do
   with the package; GPLv3 section 10 forbids adding restrictions. This is the argument that
   got VLC pulled from a store and has never been settled for the Microsoft Store. Microsoft
