@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CodeLab Studio - AppxManifest.xml for a full-trust (Win32) MSIX.
+
+  make_msix.bat copies this file to the ROOT of the package layout, next to
+  CodeLabStudio.exe. Do not edit the copy in msix\layout - edit this one.
+
+  Three values must be replaced before the package will upload. See the
+  comments on each. Everything marked PLACEHOLDER- is copied verbatim
+  (case-sensitive, spaces and punctuation included) from Partner Center.
+-->
+<Package
+    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    xmlns:desktop2="http://schemas.microsoft.com/appx/manifest/desktop/windows10/2"
+    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+    IgnorableNamespaces="uap desktop2 rescap">
+
+  <!--
+    REPLACE Name     -> Partner Center > your app > Product management >
+                        Product identity > "Package/Identity/Name"
+    REPLACE Publisher-> same page > "Package/Identity/Publisher"
+                        (the whole CN=... string, including CN=)
+
+    Version is FOUR parts and the fourth MUST be 0 for a Store submission.
+    2.0.0 -> 2.0.0.0. Next bugfix is 2.0.1.0, next feature release 2.1.0.0.
+    Never bump the fourth segment - it is reserved for the Store.
+    make_msix.bat refuses to pack unless this attribute matches its version
+    argument, so bump it here and in installer.iss's AppVersion together.
+  -->
+  <Identity
+      Name="PLACEHOLDER.CodeLabStudio"
+      Publisher="CN=PLACEHOLDER-GUID-FROM-PARTNER-CENTER"
+      Version="2.0.0.0"
+      ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>CodeLab Studio</DisplayName>
+    <!--
+      REPLACE -> Partner Center > Product management > Product identity >
+                 "Package/Properties/PublisherDisplayName". This is the
+                 publisher display name you chose at account signup.
+    -->
+    <PublisherDisplayName>PLACEHOLDER-PartnerCenter-PublisherDisplayName</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <!-- 10.0.17763.0 (Win10 1809) is the Store's floor for MSIX installs. -->
+    <TargetDeviceFamily Name="Windows.Desktop"
+                        MinVersion="10.0.17763.0"
+                        MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application
+        Id="CodeLabStudio"
+        Executable="CodeLabStudio.exe"
+        EntryPoint="Windows.FullTrustApplication">
+
+      <uap:VisualElements
+          DisplayName="CodeLab Studio"
+          Description="A C/C++ IDE for students, with the compiler and debugger built in."
+          BackgroundColor="transparent"
+          Square150x150Logo="Assets\Square150x150Logo.png"
+          Square44x44Logo="Assets\Square44x44Logo.png"
+          AppListEntry="default">
+        <uap:DefaultTile
+            Square71x71Logo="Assets\Square71x71Logo.png"
+            Square310x310Logo="Assets\Square310x310Logo.png"
+            Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="transparent" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!--
+          Replaces the Inno [Registry] association: registry writes from a
+          packaged app land in the package-private hive and never reach
+          Explorer. AllowSilentDefaultTakeOver puts CodeLab Studio in
+          "Open with" without seizing the default handler, matching the
+          old optional "assoc" task. Activation passes the file as argv[1],
+          which codelab_studio.py already handles.
+        -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="codelabsource"
+                                   desktop2:AllowSilentDefaultTakeOver="true">
+            <uap:DisplayName>C/C++ Source File</uap:DisplayName>
+            <uap:Logo>Assets\Square44x44Logo.png</uap:Logo>
+            <uap:InfoTip>Open in CodeLab Studio</uap:InfoTip>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.c</uap:FileType>
+              <uap:FileType>.cpp</uap:FileType>
+              <uap:FileType>.cc</uap:FileType>
+              <uap:FileType>.cxx</uap:FileType>
+              <uap:FileType>.h</uap:FileType>
+              <uap:FileType>.hpp</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
+
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!--
+      The only capability a packaged desktop app needs. It is a restricted
+      capability: say "packaged desktop application (Win32)" in the Partner
+      Center certification notes when asked to justify it.
+    -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+</Package>

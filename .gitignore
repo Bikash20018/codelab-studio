@@ -2,12 +2,17 @@
 build/
 dist/
 installer/
+/msix/
 *.spec
+# CodeLabStudio.spec is not generated output: it carries the UPX and bundled-data
+# settings the Store package depends on, so it is tracked.
+!CodeLabStudio.spec
 
 # Bundled compiler (downloaded separately - see README)
 mingw64/
 mingw32/
 
 # Python
+.venv/
 __pycache__/
 *.py[cod]

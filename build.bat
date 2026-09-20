@@ -13,7 +13,10 @@ echo [3/4] Building CodeLabStudio.exe...
 python -m PyInstaller --noconfirm --clean --windowed --onedir ^
   --name CodeLabStudio ^
   --icon assets\app.ico ^
-  --add-data "assets;assets" ^
+  --add-data "assets\app.ico;assets" ^
+  --add-data "assets\app.png;assets" ^
+  --add-data "tools;tools" ^
+  --add-data "licenses;licenses" ^
   codelab_studio.py || goto :fail
 
 echo [4/4] Bundling the GCC compiler...

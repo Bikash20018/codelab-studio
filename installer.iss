@@ -1,9 +1,12 @@
-; Inno Setup 6.3+  ->  creates CodeLabStudio-Setup-1.0.0.exe
+; Inno Setup 6.3+  ->  creates the versioned CodeLabStudio installer.
 ; Run build.bat first so dist\CodeLabStudio exists (with mingw64 inside).
 
 #define AppName "CodeLab Studio"
-#define AppVersion "1.2.0"
+#define AppVersion "2.0.0"
 #define AppExe "CodeLabStudio.exe"
+#ifndef SourceDir
+  #define SourceDir "dist\CodeLabStudio"
+#endif
 
 [Setup]
 AppId={{8F3C2A51-6B7D-4E1A-9C55-2D7B1E0A4C93}
@@ -31,7 +34,7 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription
 Name: "assoc"; Description: "Add CodeLab Studio to ""Open with"" for .c and .cpp files"; GroupDescription: "Files:"; Flags: unchecked
 
 [Files]
-Source: "dist\CodeLabStudio\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"

@@ -1,0 +1,96 @@
+CodeLab Studio 2.0.0 — third-party notices
+==========================================
+
+CodeLab Studio itself is the work of Bikash Chhetri (www.bikashchhetri.com.np).
+It ships unmodified third-party programs so that students do not have to install
+a compiler themselves. Those programs stay under their own licenses, which are
+reproduced in full in this folder. Nothing here changes the license of the code
+a student writes, or of the .exe files they compile.
+
+
+1. GCC toolchain (MinGW-w64 build)
+----------------------------------
+Shipped as: mingw64\
+Exact build: winlibs personal build version gcc-16.1.0-mingw-w64ucrt-14.0.0-r4
+             (built with GCC 16.1.0, packaged 2026-07-30; see
+             mingw64\version_info.txt inside the installation)
+Upstream:    https://winlibs.com/
+
+Components used by CodeLab Studio and their licenses:
+
+  GCC 16.1.0 (gcc, g++, cpp, cc1, cc1plus)
+      GNU General Public License v3 or later      -> GPL-3.0.txt
+      Runtime libraries (libgcc, libstdc++, libgomp) are GPLv3 with the
+      GCC Runtime Library Exception, which is why programs compiled with
+      this toolchain are NOT themselves covered by the GPL
+                                                  -> GCC-Runtime-Library-Exception-3.1.txt
+                                                  -> GPL-3.0.txt, LGPL-3.0.txt
+
+  GDB 17.2 (gdb)  — used by the Debug menu
+      GNU General Public License v3 or later      -> GPL-3.0.txt
+
+  GNU Binutils 2.47.20260726 (ld, as, ar, objdump and friends)
+      GNU General Public License v3 or later      -> GPL-3.0.txt
+      Some libraries are LGPL                     -> LGPL-3.0.txt, LGPL-2.1.txt
+
+  MinGW-w64 runtime 14.0.0 (the Windows headers and import libraries every
+  compiled program links against)
+      Permissive, with some parts under other terms; see
+                                                  -> MinGW-w64-runtime-COPYING.txt
+      Public-domain and BSD-like parts, plus ZPL for a small subset.
+
+  Older GPLv2 / LGPLv2.1 components exist inside the same toolchain tree; both
+  texts are included for completeness
+                                                  -> GPL-2.0.txt, LGPL-2.1.txt
+
+
+WRITTEN OFFER FOR SOURCE CODE (GPLv3 section 6)
+-----------------------------------------------
+The GPL requires that everyone who receives these binaries can also get the
+corresponding source code. The complete corresponding source for the exact
+build above is published by its distributor at:
+
+    https://winlibs.com/
+
+and the matching source archive for this build is the one named
+    gcc-16.1.0-mingw-w64ucrt-14.0.0-r4
+on that site's download page.
+
+In addition, and for as long as CodeLab Studio is distributed, a version-pinned
+copy of that source archive is kept available at:
+
+    https://www.bikashchhetri.com.np/codelab-studio/source
+
+    >>> ACTION REQUIRED BEFORE THE FIRST STORE SUBMISSION <<<
+    That page must exist and must serve the source archive matching the build
+    string above, at no charge, before the package is published. GPLv3 6(d)
+    permits pointing at a network server; it does not permit pointing at
+    "winlibs.com somewhere". Keep it reachable for as long as you distribute
+    this version, and cite the URL in the Microsoft Store description.
+
+
+2. clang-format (LLVM)
+----------------------
+Shipped as: tools\clang-format.exe (inside the app's _internal\tools folder in
+            packaged builds); used by Learn & Tools > Format Code.
+License:    Apache License 2.0 with the LLVM Exception
+                                                  -> LLVM-Apache-2.0-with-LLVM-exception.txt
+Notices:    tools\ThirdPartyNotices.txt carries the distributor's own notices
+            for this binary.
+
+
+3. Python and Tk
+----------------
+CodeLab Studio is written in Python and uses only its standard library,
+including Tkinter/Tk. The interpreter and Tk runtime are embedded by
+PyInstaller. Python is distributed under the PSF License Agreement and Tcl/Tk
+under the Tcl/Tk (BSD-style) license; both permit this redistribution.
+PyInstaller's bootloader is GPLv2 with an exception that explicitly allows
+bundling proprietary or differently licensed applications.
+
+
+4. What this means for a student's own work
+-------------------------------------------
+Programs written in CodeLab Studio belong to whoever wrote them. Compiling with
+GCC does not place a program under the GPL — that is the entire purpose of the
+GCC Runtime Library Exception reproduced in this folder.

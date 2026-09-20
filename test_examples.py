@@ -52,6 +52,16 @@ def check_manifest_workaround():
     assert cmd[1:3] == ["-B", r"C:\nospaces"], "-B missing or misplaced: %s" % cmd
 
 
+def check_new_program_names():
+    """The New dialog must reject names Windows cannot store."""
+    import codelab_studio as app_module
+
+    assert app_module.name_problem("program1") is None
+    assert app_module.name_problem("my_first-prog2") is None
+    for bad in ("", "   ", "my prog?", "a/b", "hello.", "con", "NUL", "x" * 61):
+        assert app_module.name_problem(bad), "should have been rejected: %r" % bad
+
+
 def check_editor_features():
     """Word suggestions, error squiggles and the x on each tab."""
     import tkinter as tk
@@ -78,15 +88,50 @@ def check_editor_features():
         assert "printf" in offered, "printf not offered for p: %s" % offered
         assert offered[0] == "printf", "common words should come first: %s" % offered
 
+        # Enter must NOT swap the word in until the student picks with an arrow key,
+        # otherwise typing a finished word and pressing Enter silently rewrites it.
+        assert editor.completer.accept(only_if_chosen=True) is None, \
+            "Enter accepted a suggestion the student never selected"
+        assert not editor.completer.visible(), "popup should close when Enter is let through"
+
+        editor.text.insert("insert", "r")
+        editor.on_key_release(Key("r", "r"))
+        root.update()
+        assert editor.completer.visible(), "no suggestions after typing pr"
         editor.completer.accept()
         root.update()
         assert editor.text.get("5.0", "5.end").strip() == "printf", \
             "accepting did not insert the word: %r" % editor.text.get("5.0", "5.end")
         assert not editor.completer.visible(), "popup stayed open after accepting"
 
+        editor.on_keypress(Key("(", "parenleft"))    # auto-pair, then Backspace kills both
+        root.update()
+        assert editor.text.get("5.0", "5.end").strip() == "printf()", editor.text.get("5.0", "5.end")
+        editor.on_backspace(None)
+        assert editor.text.get("5.0", "5.end").strip() == "printf", \
+            "Backspace left an orphan bracket: %r" % editor.text.get("5.0", "5.end")
+
         editor.set_diagnostics({5: ("error", 5), 3: ("warning", 1)})
         root.update()
         assert len(editor.squiggles) == 2, "expected 2 squiggles, got %d" % len(editor.squiggles)
+
+        # jump-to-first-error reads the (kind, col) tuples, not bare strings
+        first = min((l for l, (k, _c) in editor.diag.items() if k == "error"), default=None)
+        assert first == 5, "first error line not found: %r" % first
+
+        # A blank line must get a short squiggle, not one spanning the window:
+        # line 2 of the fixture is empty, and "2.end-1c" would land on line 1.
+        editor.set_diagnostics({2: ("error", 1)})
+        root.update()
+        assert len(editor.squiggles) == 1
+        narrow = int(editor.squiggles[0].cget("width"))
+        assert narrow < 60, "squiggle on a blank line is %dpx wide" % narrow
+
+        editor.text.edit_modified(False)
+        editor.text.insert("insert", "x")            # editing invalidates the markers
+        root.update()
+        assert not editor.diag, "stale diagnostics survived an edit"
+        assert not editor.squiggles, "stale squiggles survived an edit"
 
         close_at = None
         for x in range(0, 600, 2):
@@ -173,7 +218,8 @@ def main():
     if failures:
         return 1
 
-    for check in (check_manifest_workaround, check_editor_features, check_browser):
+    for check in (check_manifest_workaround, check_new_program_names,
+                  check_editor_features, check_browser):
         try:
             check()
         except Exception as ex:                  # noqa: BLE001 - report anything that breaks
