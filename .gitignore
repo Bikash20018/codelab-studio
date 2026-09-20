@@ -16,3 +16,7 @@ mingw32/
 .venv/
 __pycache__/
 *.py[cod]
+
+# Store listing bundle produced by make_listing_csv.py
+store-listing.zip
+store-listing/listing.csv

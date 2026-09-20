@@ -1,0 +1,123 @@
+# CodeLab Studio - Microsoft Store listing content (en-us)
+#
+# One block per Partner Center listing field. A line starting with "## " names
+# the field exactly as it appears in the Field column of an exported listing
+# .csv; everything until the next "## " is that field's value. Lines starting
+# with "#" at the left margin are comments and are ignored.
+#
+# make_listing_csv.py merges this into a listing .csv exported from Partner
+# Center, which is the only way to keep the ID column Partner Center requires.
+
+## Title
+CodeLab Studio
+
+## ShortTitle
+CodeLab Studio
+
+## ShortDescription
+A C and C++ IDE built for students. The compiler, the debugger and the formatter are already inside - install it and write your first program a minute later. No setup, no accounts, no internet needed.
+
+## Description
+CodeLab Studio includes the MinGW-w64 build of the GCC compiler and the GDB debugger (GNU General Public License v3) and LLVM clang-format (Apache 2.0 with the LLVM exception). Everything is contained in this package - nothing is downloaded during or after installation. The app compiles and runs the C and C++ programs you write, locally on your own computer. Licences and the corresponding source for these components: https://github.com/Bikash20018/codelab-studio/blob/main/SOURCE.md
+
+Getting started with C or C++ usually means installing a compiler, setting a PATH, and losing an afternoon before printing "Hello". CodeLab Studio removes that. Install it, press F11, and your program runs.
+
+Write in a proper editor with syntax highlighting, line numbers, auto-indent, bracket matching, word suggestions as you type, find and replace, and tabs. Press F9 to compile, F10 to run, F11 for both. Compiler errors appear as red wavy underlines and in a Problems table - click one and you land on the line that caused it, with a plain-English explanation of what the message actually means.
+
+Programs can run inside the Output panel, where you type input a line at a time and see output as it appears, or in their own console window so scanf and cin behave exactly as they do outside the IDE.
+
+When something goes wrong, step through it. The Debug menu drives a real GDB session: set breakpoints, step over and into, and watch your local variables change.
+
+81 worked example programs across 11 topics are built in, from your first printf to classes, the STL and file handling. Eight practice exercises give you a prompt, a hint, starter code and hidden test cases, then check your program's output against every case.
+
+Your work is protected. Every save is atomic, so a crash never leaves a half-written file, and the workspace is snapshotted as you type - tabs, unsaved text, cursor position and breakpoints all come back after a power cut.
+
+Also: multi-file projects that mix C and C++, one-key formatting with clang-format, light and dark themes, and static linking so the .exe files you build run on any Windows PC.
+
+Free, with no advertising, no accounts and no telemetry. Developed by Bikash Chhetri.
+
+## ReleaseNotes
+2.0.0 adds a real GDB debugger with breakpoints and local variables, crash recovery that restores unsaved work after a power cut, one-key clang-format, live line-by-line input in the Output panel, eight built-in practice exercises with hidden test cases, multi-file C and C++ projects, and a light theme.
+
+## Feature1
+The GCC compiler and GDB debugger are built in - nothing else to install
+
+## Feature2
+F9 compile, F10 run, F11 compile and run
+
+## Feature3
+Click any compiler error to jump to the line that caused it
+
+## Feature4
+Plain-English explanations for common C and C++ mistakes
+
+## Feature5
+Run in the Output panel with live input, or in a real console window
+
+## Feature6
+Real GDB debugging: breakpoints, step over, step into, local variables
+
+## Feature7
+81 built-in example programs across 11 topics, with a searchable browser
+
+## Feature8
+8 practice exercises that check your output against hidden test cases
+
+## Feature9
+Crash recovery: unsaved work, cursor and breakpoints survive a power cut
+
+## Feature10
+One-key formatting with clang-format, and light and dark themes
+
+## Feature11
+Multi-file projects that mix C and C++ in one program
+
+## Feature12
+Statically linked output - your .exe runs on any Windows PC
+
+## SearchTerm1
+C compiler
+
+## SearchTerm2
+C++ IDE
+
+## SearchTerm3
+learn C programming
+
+## SearchTerm4
+GCC
+
+## SearchTerm5
+GDB debugger
+
+## SearchTerm6
+code editor for students
+
+## SearchTerm7
+beginner programming
+
+## CopyrightTrademarkInfo
+(c) 2026 Bikash Chhetri. Includes GCC and GDB (c) Free Software Foundation under the GNU GPL v3, and clang-format (c) LLVM Project under Apache 2.0 with the LLVM exception.
+
+## AdditionalLicenseTerms
+CodeLab Studio bundles third-party software under their own licences, reproduced in full inside the app and at https://github.com/Bikash20018/codelab-studio/tree/main/licenses - GCC, GDB and GNU Binutils under the GNU GPL v3, the MinGW-w64 runtime under its own permissive terms, and LLVM clang-format under Apache 2.0 with the LLVM exception. Corresponding source for the GPL components: https://github.com/Bikash20018/codelab-studio/blob/main/SOURCE.md - Programs you write are entirely your own; compiling with GCC does not place your program under the GPL, per the GCC Runtime Library Exception.
+
+## DevelopedBy
+Bikash Chhetri
+
+# Screenshots. Put the .png files in this folder and keep these paths relative
+# to the folder you zip, exactly as Partner Center's importer expects:
+#   <root folder name>/<file name>
+# At least one screenshot is required; 1366x768 or larger.
+
+## DesktopScreenshot1
+store-listing/01-editor.png
+
+## DesktopScreenshot2
+store-listing/02-error-problems.png
+
+## DesktopScreenshot3
+store-listing/03-debugger.png
+
+## DesktopScreenshot4
+store-listing/04-examples.png
