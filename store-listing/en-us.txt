@@ -8,8 +8,8 @@
 # make_listing_csv.py merges this into a listing .csv exported from Partner
 # Center, which is the only way to keep the ID column Partner Center requires.
 
-## Title
-CodeLab Studio
+## ProductName
+Code Lab Studio
 
 ## ShortTitle
 CodeLab Studio
@@ -36,70 +36,70 @@ Also: multi-file projects that mix C and C++, one-key formatting with clang-form
 
 Free, with no advertising, no accounts and no telemetry. Developed by Bikash Chhetri.
 
-## ReleaseNotes
+## WhatsNew
 2.0.0 adds a real GDB debugger with breakpoints and local variables, crash recovery that restores unsaved work after a power cut, one-key clang-format, live line-by-line input in the Output panel, eight built-in practice exercises with hidden test cases, multi-file C and C++ projects, and a light theme.
 
-## Feature1
+## ProductFeatures1
 The GCC compiler and GDB debugger are built in - nothing else to install
 
-## Feature2
+## ProductFeatures2
 F9 compile, F10 run, F11 compile and run
 
-## Feature3
+## ProductFeatures3
 Click any compiler error to jump to the line that caused it
 
-## Feature4
+## ProductFeatures4
 Plain-English explanations for common C and C++ mistakes
 
-## Feature5
+## ProductFeatures5
 Run in the Output panel with live input, or in a real console window
 
-## Feature6
+## ProductFeatures6
 Real GDB debugging: breakpoints, step over, step into, local variables
 
-## Feature7
+## ProductFeatures7
 81 built-in example programs across 11 topics, with a searchable browser
 
-## Feature8
+## ProductFeatures8
 8 practice exercises that check your output against hidden test cases
 
-## Feature9
+## ProductFeatures9
 Crash recovery: unsaved work, cursor and breakpoints survive a power cut
 
-## Feature10
+## ProductFeatures10
 One-key formatting with clang-format, and light and dark themes
 
-## Feature11
+## ProductFeatures11
 Multi-file projects that mix C and C++ in one program
 
-## Feature12
+## ProductFeatures12
 Statically linked output - your .exe runs on any Windows PC
 
-## SearchTerm1
+## SearchTerms1
 C compiler
 
-## SearchTerm2
+## SearchTerms2
 C++ IDE
 
-## SearchTerm3
+## SearchTerms3
 learn C programming
 
-## SearchTerm4
+## SearchTerms4
 GCC
 
-## SearchTerm5
+## SearchTerms5
 GDB debugger
 
-## SearchTerm6
+## SearchTerms6
 code editor for students
 
-## SearchTerm7
+## SearchTerms7
 beginner programming
 
-## CopyrightTrademarkInfo
+## Copyright
 (c) 2026 Bikash Chhetri. Includes GCC and GDB (c) Free Software Foundation under the GNU GPL v3, and clang-format (c) LLVM Project under Apache 2.0 with the LLVM exception.
 
-## AdditionalLicenseTerms
+## Applicable license terms
 CodeLab Studio bundles third-party software under their own licences, reproduced in full inside the app and at https://github.com/Bikash20018/codelab-studio/tree/main/licenses - GCC, GDB and GNU Binutils under the GNU GPL v3, the MinGW-w64 runtime under its own permissive terms, and LLVM clang-format under Apache 2.0 with the LLVM exception. Corresponding source for the GPL components: https://github.com/Bikash20018/codelab-studio/blob/main/SOURCE.md - Programs you write are entirely your own; compiling with GCC does not place your program under the GPL, per the GCC Runtime Library Exception.
 
 ## DevelopedBy
@@ -110,14 +110,14 @@ Bikash Chhetri
 #   <root folder name>/<file name>
 # At least one screenshot is required; 1366x768 or larger.
 
-## DesktopScreenshot1
-store-listing/01-editor.png
+## Screenshots1
+01-editor.png
 
-## DesktopScreenshot2
-store-listing/02-error-problems.png
+## Screenshots2
+02-error-problems.png
 
-## DesktopScreenshot3
-store-listing/03-debugger.png
+## Screenshots3
+03-debugger.png
 
-## DesktopScreenshot4
-store-listing/04-examples.png
+## Screenshots4
+04-examples.png
