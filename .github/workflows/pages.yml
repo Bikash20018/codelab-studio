@@ -1,0 +1,82 @@
+name: Publish download page
+
+# The Microsoft Store's EXE/MSI submission refuses a package URL that redirects,
+# and release-asset URLs always redirect to a signed CDN host. GitHub Pages
+# serves files directly, but anything committed to git is capped at 100 MB and
+# the installer is far bigger. So this workflow pulls the installer out of the
+# release at deploy time and publishes it as Pages content, which never passes
+# through git.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version to publish (tag without the leading v)
+        required: true
+        default: 2.0.0
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Work out the version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "value=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch the installer from the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          mkdir -p "_site/downloads/$VERSION"
+          gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" \
+            --pattern "CodeLabStudio-Setup-$VERSION.exe" \
+            --dir "_site/downloads/$VERSION"
+          ls -l "_site/downloads/$VERSION"
+
+      - name: Write a landing page
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          # .nojekyll stops Pages from filtering paths that start with an underscore.
+          touch _site/.nojekyll
+          cat > _site/index.html <<HTML
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>CodeLab Studio downloads</title>
+          <style>
+            body { font: 16px/1.6 system-ui, sans-serif; max-width: 42rem; margin: 4rem auto; padding: 0 1rem; }
+            code { background: #f4f4f5; padding: .15em .4em; border-radius: .25em; }
+          </style>
+          <h1>CodeLab Studio</h1>
+          <p>A C/C++ IDE for students, with the compiler and debugger built in.</p>
+          <p><a href="downloads/$VERSION/CodeLabStudio-Setup-$VERSION.exe">Download CodeLabStudio-Setup-$VERSION.exe</a> — 64-bit Windows 10 or newer.</p>
+          <p>Source, licences and the third-party source offer:
+             <a href="https://github.com/$GITHUB_REPOSITORY">github.com/$GITHUB_REPOSITORY</a></p>
+          HTML
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
