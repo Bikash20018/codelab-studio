@@ -7,26 +7,25 @@ numbers are assigned per product. The workflow is therefore:
 
     1. Partner Center > Store listings > Export listing   (gives listing.csv)
     2. python make_listing_csv.py <exported.csv>
-    3. import the produced store-listing.zip
+    3. Partner Center > Import listings > Import folder, and select the
+       store-listing folder. Not a .zip - the control is a folder picker, and
+       the folder must hold exactly one .csv plus the image assets.
 
 Only the language column is touched. Fields named in en-us.txt that the export
 does not contain are reported rather than invented, and fields the export has
 but the content file does not are left exactly as they were.
 
-    python make_listing_csv.py exported.csv            # -> store-listing.zip
+    python make_listing_csv.py exported.csv            # -> store-listing/listing.csv
     python make_listing_csv.py exported.csv --lang fr-fr
     python make_listing_csv.py --selftest
 """
 
 import csv
-import os
 from pathlib import Path
 import sys
-import zipfile
 
 HERE = Path(__file__).resolve().parent
 CONTENT = HERE / 'store-listing' / 'en-us.txt'
-OUT_ZIP = HERE / 'store-listing.zip'
 
 
 def read_content(path):
@@ -97,13 +96,6 @@ def main(argv):
     with open(out_csv, 'w', newline='', encoding='utf-8-sig') as stream:
         csv.writer(stream).writerows(rows)
 
-    # The importer wants a zip whose entries live under one root folder, and the
-    # asset paths in the .csv are relative to that same root.
-    with zipfile.ZipFile(OUT_ZIP, 'w', zipfile.ZIP_DEFLATED) as bundle:
-        for item in sorted(staged.iterdir()):
-            if item.suffix.lower() in ('.csv', '.png', '.jpg', '.jpeg'):
-                bundle.write(item, f'store-listing/{item.name}')
-
     print(f'filled {len(filled)} fields for {language}:')
     print('  ' + ', '.join(filled))
     if missing:
@@ -114,7 +106,13 @@ def main(argv):
     shots = [f for f in staged.iterdir() if f.suffix.lower() in ('.png', '.jpg', '.jpeg')]
     if not shots:
         print('\nWARNING: no screenshots in store-listing/. At least one is required.')
-    print(f'\nwrote {OUT_ZIP.relative_to(HERE)} - import that in Partner Center.')
+    strays = [f.name for f in staged.glob('*.csv') if f.name != out_csv.name]
+    if strays:
+        print(f'\nWARNING: more than one .csv in the folder ({", ".join(strays)}).')
+        print('  The importer requires exactly one - move or delete the others.')
+    print(f'\nwrote {out_csv.relative_to(HERE)}')
+    print('Partner Center > Import listings > Import folder, then select the')
+    print(f'{staged.name} folder itself. It is a folder picker, not a file or zip.')
 
 
 def selftest():
