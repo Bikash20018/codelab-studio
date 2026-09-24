@@ -11,14 +11,15 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from recovery import SessionStore, fingerprint
+from workbench import Workbench
 
 
 LIGHT = {
-    'bg': '#ffffff', 'panel': '#f1f3f8', 'header': '#f1f3f8', 'gutter': '#f7f8fb',
-    'console': '#f8f9fc', 'btn': '#e2e6ef', 'btn_hover': '#d4dae8', 'border': '#ccd2df',
-    'fg': '#202737', 'muted': '#526078', 'accent': '#6141bd', 'accent_fill': '#6547cc',
-    'accent_hover': '#5437b8', 'go': '#087c60', 'go_hover': '#05694f', 'go_text': '#087153',
-    'status': '#f1f3f8', 'cursor': '#07684e', 'sel': '#dcd3fa', 'curline': '#f1f4fc',
+    'bg': '#f8faff', 'panel': '#edf2f8', 'header': '#edf2f8', 'gutter': '#f0f4fa',
+    'console': '#ffffff', 'btn': '#dde7f2', 'btn_hover': '#cedced', 'border': '#c9d5e5',
+    'fg': '#25354a', 'muted': '#52647c', 'accent': '#255eaa', 'accent_fill': '#2863ad',
+    'accent_hover': '#215797', 'go': '#197455', 'go_hover': '#146044', 'go_text': '#12694e',
+    'status': '#edf2f8', 'cursor': '#255eaa', 'sel': '#d6e6fc', 'curline': '#eaf1fb',
     'errline': '#fff0f1', 'warnline': '#fff5dc', 'find': '#8b5d00',
     'danger': '#b52240', 'warn': '#895d00', 'ok': '#087153', 'note': '#245a9d',
     'func': '#805111', 'num': '#a84824', 'kw': '#80349d', 'type': '#245a9d',
@@ -26,10 +27,10 @@ LIGHT = {
 }
 
 
-class WorkspaceFeatures:
-    def init_features(self, colors, find_tool, resource):
+class WorkspaceFeatures(Workbench):
+    def init_features(self, colors, find_tool, resource, dark_colors):
         self.colors = colors
-        self.dark_colors = dict(colors)
+        self.dark_colors = dict(dark_colors)
         self.find_tool = find_tool
         self.resource = resource
         self.theme = self.settings.get('theme', 'dark')
@@ -56,6 +57,7 @@ class WorkspaceFeatures:
         self.welcome_frame = None
         self.project_panel = None
         self._session_tick = None
+        self.focus_mode = False
 
     def cancel_timer(self, timer):
         if timer:
@@ -170,29 +172,56 @@ class WorkspaceFeatures:
         c = self.colors
         self.welcome_frame = frame = tk.Frame(self.nb, bg=c['bg'])
         frame.place(relx=0, rely=0, relwidth=1, relheight=1)
-        content = tk.Frame(frame, bg=c['bg'])
-        content.pack(expand=True, padx=35, pady=25)
-        tk.Label(content, text='Your next program starts here.', font=(self.ui, 25, 'bold'),
-                 bg=c['bg'], fg=c['fg']).pack(anchor='w', pady=(0, 8))
-        tk.Label(content, text='Write C and C++, explore examples, and learn one step at a time.',
-                 font=(self.ui, 11), bg=c['bg'], fg=c['muted']).pack(anchor='w', pady=(0, 24))
+        canvas = tk.Canvas(frame, bg=c['bg'], highlightthickness=0)
+        scroll = ttk.Scrollbar(frame, command=canvas.yview)
+        canvas.configure(yscrollcommand=scroll.set)
+        scroll.pack(side='right', fill='y')
+        canvas.pack(fill='both', expand=True)
+        host = tk.Frame(canvas, bg=c['bg'])
+        window = canvas.create_window(0, 0, window=host, anchor='nw')
+        canvas.bind('<Configure>', lambda e: canvas.itemconfigure(window, width=e.width))
+        host.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+        content = tk.Frame(host, bg=c['bg'])
+        content.pack(fill='x', padx=28, pady=22)
+        tk.Label(content, text='Your next idea,\nready to run.', font=(self.ui, 29, 'bold'),
+                 justify='left', bg=c['bg'], fg=c['fg']).pack(anchor='w', pady=(0, 10))
+        tk.Label(content, text='A workspace for writing, testing and understanding C and C++.',
+                 wraplength=490, justify='left', font=(self.ui, 11), bg=c['bg'], fg=c['muted']).pack(anchor='w', pady=(0, 16))
         actions = tk.Frame(content, bg=c['bg'])
         actions.pack(anchor='w')
-        self.button(actions, 'New program', self.new_file_dialog, 'primary')
+        self.button(actions, 'New C program', lambda: self.new_file_dialog('c'), 'primary')
+        self.button(actions, 'New C++ program', lambda: self.new_file_dialog('cpp'))
         self.button(actions, 'Open folder', self.open_project)
-        self.button(actions, 'Examples', self.show_examples)
-        self.button(actions, 'Practice', self.show_practice)
-        tk.Label(content, text='RECENT FILES', bg=c['bg'], fg=c['muted'],
-                 font=(self.ui, 9, 'bold')).pack(anchor='w', pady=(25, 5))
-        for path in self.recent_files[:5]:
-            tk.Button(content, text=os.path.basename(path) + '  ·  ' + os.path.dirname(path),
+        tk.Frame(content, bg=c['border'], height=1).pack(fill='x', pady=(22, 16))
+        bottom = tk.Frame(content, bg=c['bg'])
+        bottom.pack(fill='x')
+        recent = tk.Frame(bottom, bg=c['bg'])
+        recent.pack(side='left', fill='both', expand=True)
+        tk.Label(recent, text='Pick up where you left off', bg=c['bg'], fg=c['fg'],
+                 font=(self.ui, 11, 'bold')).pack(anchor='w', pady=(0, 8))
+        for path in self.recent_files[:3]:
+            tk.Button(recent, text=os.path.basename(path),
                       command=lambda p=path: self.open_path(p), bg=c['bg'], fg=c['accent'],
+                      activebackground=c['sel'], activeforeground=c['fg'],
                       relief='flat', anchor='w', font=(self.ui, 10), cursor='hand2').pack(anchor='w')
         if not self.recent_files:
-            tk.Label(content, text='Files you open will appear here.', bg=c['bg'],
+            tk.Label(recent, text='Your recent files will appear here.', bg=c['bg'],
                      fg=c['muted'], font=(self.ui, 10)).pack(anchor='w')
-        tk.Button(content, text='Continue to editor →', command=self.hide_welcome,
-                  bg=c['bg'], fg=c['muted'], relief='flat', cursor='hand2').pack(anchor='w', pady=(20, 0))
+        guide = tk.Frame(bottom, bg=c['bg'])
+        guide.pack(side='right', anchor='n', padx=(20, 0))
+        tk.Label(guide, text='A faster way around', bg=c['bg'], fg=c['fg'],
+                 font=(self.ui, 11, 'bold')).pack(anchor='w', pady=(0, 8))
+        for shortcut, label in (('Ctrl+P', 'Open a file'), ('Ctrl+Shift+P', 'Find any command'), ('F11', 'Build and run')):
+            tk.Label(guide, text=f'{shortcut}   {label}', bg=c['bg'], fg=c['muted'],
+                     font=(self.ui, 9)).pack(anchor='w', pady=2)
+        tk.Button(content, text='Continue to editor', command=self.hide_welcome,
+                  bg=c['bg'], fg=c['accent'], activebackground=c['sel'], activeforeground=c['fg'],
+                  relief='flat', cursor='hand2', font=(self.ui, 10)).pack(anchor='w', pady=(15, 0))
+        def bind_scroll(widget):
+            widget.bind('<MouseWheel>', lambda e: canvas.yview_scroll(-1 if e.delta > 0 else 1, 'units'))
+            for child in widget.winfo_children():
+                bind_scroll(child)
+        bind_scroll(host)
 
     def set_theme(self, theme):
         if theme not in ('light', 'dark'):
@@ -200,6 +229,8 @@ class WorkspaceFeatures:
         old = dict(self.colors)
         self.colors.update(LIGHT if theme == 'light' else self.dark_colors)
         self.theme = theme
+        if hasattr(self, 'theme_var'):
+            self.theme_var.set(theme)
         mapping = {v.lower(): self.colors[k] for k, v in old.items()}
 
         def recolor(widget):
@@ -215,6 +246,15 @@ class WorkspaceFeatures:
                     pass
             for child in widget.winfo_children():
                 recolor(child)
+            kind = getattr(widget, '_button_kind', None)
+            if kind:
+                normal, hover, foreground = {'normal': ('btn', 'btn_hover', 'fg'),
+                    'quiet': ('panel', 'btn', 'muted'), 'primary': ('accent_fill', 'accent_hover', None),
+                    'go': ('go', 'go_hover', None)}[kind]
+                widget.configure(bg=self.colors[normal], activebackground=self.colors[hover],
+                                 fg=self.colors[foreground] if foreground else 'white',
+                                 activeforeground=self.colors[foreground] if foreground else 'white',
+                                 highlightbackground=self.colors[normal])
         recolor(self.root)
         self.style_ttk()
         for ed in self.editors():
@@ -309,6 +349,10 @@ class WorkspaceFeatures:
         menubar.add_cascade(label='Debug', menu=debug)
         view = tk.Menu(menubar, tearoff=False)
         view.add_command(label='Welcome', command=self.show_welcome)
+        view.add_command(label='Command Palette', accelerator='Ctrl+Shift+P', command=self.show_picker)
+        view.add_command(label='Quick Open File', accelerator='Ctrl+P', command=lambda: self.show_picker(files=True))
+        view.add_command(label='Focus Mode', accelerator='Ctrl+Shift+M', command=self.toggle_focus_mode)
+        view.add_separator()
         self.theme_var = tk.StringVar(value=self.theme)
         for value in ('dark', 'light'):
             view.add_radiobutton(label=value.title() + ' Theme', value=value, variable=self.theme_var,
@@ -319,16 +363,63 @@ class WorkspaceFeatures:
         c = self.colors
         self.workspace = tk.PanedWindow(parent, orient='horizontal', bg=c['border'], sashwidth=4, bd=0)
         self.project_panel = tk.Frame(self.workspace, bg=c['panel'])
-        tk.Label(self.project_panel, text='PROJECT FILES', bg=c['panel'], fg=c['muted'],
-                 font=(self.ui, 9, 'bold'), anchor='w', padx=10, pady=10).pack(fill='x')
-        self.project_tree = ttk.Treeview(self.project_panel, show='tree', style='Examples.Treeview', selectmode='browse')
+        self.workspace.add(self.project_panel, width=self.px(225), minsize=self.px(185), stretch='never')
+        top = tk.Frame(self.project_panel, bg=c['panel'], padx=9)
+        top.pack(fill='x', pady=(8, 0))
+        tk.Label(top, text='Workspace', bg=c['panel'], fg=c['fg'], font=(self.ui, 11, 'bold')).pack(side='left', padx=4)
+        self.focus_button = self.button(top, 'Focus', self.toggle_focus_mode, 'quiet', side='right')
+        self.sidebar_action('Find in files', 'Ctrl+Shift+F', self.show_workspace_search)
+        self.sidebar_action('Quick open', 'Ctrl+P', lambda: self.show_picker(files=True))
+        footer = tk.Frame(self.project_panel, bg=c['panel'])
+        footer.pack(side='bottom', fill='x', padx=8, pady=(5, 8))
+        tk.Frame(footer, bg=c['border'], height=1).pack(fill='x', padx=6, pady=5)
+        for actions in ((('Examples', self.show_examples), ('Practice', self.show_practice)),
+                        (('Format', self.format_current), ('Check solution', self.check_practice))):
+            row = tk.Frame(footer, bg=c['panel'])
+            row.pack(fill='x')
+            for title, callback in actions:
+                button = self.button(row, title, callback, 'quiet')
+                button.pack_configure(pady=1, expand=True, fill='x')
+                button.configure(font=(self.ui, 9), padx=6)
+        tk.Frame(self.project_panel, bg=c['border'], height=1).pack(fill='x', padx=14, pady=5)
+        tk.Label(self.project_panel, text='Open programs', bg=c['panel'], fg=c['muted'],
+                 font=(self.ui, 9, 'bold'), anchor='w', padx=15, pady=5).pack(fill='x')
+        self.open_files = ttk.Treeview(self.project_panel, show='tree', height=2,
+                                       style='Examples.Treeview', selectmode='browse')
+        self.open_files.column('#0', width=self.px(195), minwidth=self.px(120))
+        self.open_files.pack(fill='x', padx=8)
+        self.open_files.bind('<ButtonRelease-1>', lambda e: self.open_sidebar_file())
+        self.open_files.bind('<Return>', lambda e: self.open_sidebar_file())
+        project_head = tk.Frame(self.project_panel, bg=c['panel'])
+        project_head.pack(fill='x', padx=10, pady=(10, 0))
+        tk.Label(project_head, text='Project files', bg=c['panel'], fg=c['muted'],
+                 font=(self.ui, 9, 'bold')).pack(side='left', padx=4)
+        self.button(project_head, 'Folder…', self.open_project, 'quiet', side='right')
+        self.project_title = tk.Label(self.project_panel, bg=c['panel'], fg=c['muted'], wraplength=self.px(195),
+                                      font=(self.ui, 8), padx=8, pady=6)
+        self.project_title.pack(side='bottom', fill='x')
+        tree_body = tk.Frame(self.project_panel, bg=c['panel'])
+        tree_body.pack(fill='both', expand=True, padx=8)
+        self.project_tree = ttk.Treeview(tree_body, show='tree', style='Examples.Treeview', selectmode='browse', height=2)
+        self.project_tree.column('#0', width=self.px(190), minwidth=self.px(120))
+        scrollbar = ttk.Scrollbar(tree_body, command=self.project_tree.yview)
+        self.project_tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side='right', fill='y')
         self.project_tree.pack(fill='both', expand=True)
         self.project_tree.bind('<Double-1>', lambda e: self.open_project_file())
         self.project_tree.bind('<Return>', lambda e: self.open_project_file())
-        self.project_title = tk.Label(self.project_panel, bg=c['panel'], fg=c['muted'], wraplength=180,
-                                      font=(self.ui, 8), padx=8, pady=8)
-        self.project_title.pack(fill='x')
+        self.project_title.configure(text='Open a folder to work with multiple files.')
+        self._project_files = {}
         return self.workspace
+
+    def sidebar_action(self, label, shortcut, command):
+        row = tk.Frame(self.project_panel, bg=self.colors['panel'])
+        row.pack(fill='x', padx=8)
+        button = self.button(row, label, command, 'quiet')
+        button.pack_configure(fill='x', expand=True, pady=0)
+        button.configure(anchor='w', padx=8, pady=5, font=(self.ui, 9))
+        if shortcut:
+            button.configure(text=f'{label}   {shortcut}')
 
     def open_project(self, folder=None):
         from projects import Project
@@ -345,8 +436,10 @@ class WorkspaceFeatures:
             return
         self.hide_welcome()
         self.project_exe = None
+        if self.focus_mode:
+            self.toggle_focus_mode()
         if str(self.project_panel) not in self.workspace.panes():
-            self.workspace.add(self.project_panel, before=self.nb, width=215, minsize=150, stretch='never')
+            self.workspace.add(self.project_panel, before=self.main_panes, width=self.px(225), minsize=self.px(185), stretch='never')
         self.refresh_project_tree()
         self.set_status('Project active · Build compiles the selected files in this folder')
         self.schedule_session()
@@ -356,18 +449,21 @@ class WorkspaceFeatures:
             return
         self.project = None
         self.project_exe = None
-        self.workspace.forget(self.project_panel)
+        self.project_tree.delete(*self.project_tree.get_children())
+        self._project_files = {}
+        self.project_title.configure(text='Open a folder to work with multiple files.')
         self.schedule_session()
         self.set_status('Folder closed · Build compiles the current file')
 
     def refresh_project_tree(self):
         if not self.project:
             return
+        self.project.files = self.project.discover()
         self.project_tree.delete(*self.project_tree.get_children())
         self._project_files = {}
         parents = {'.': ''}
         selected = {str(p) for p in self.project.sources}
-        for rel in self.project.discover():
+        for rel in self.project.files:
             parent = ''
             for i, part in enumerate(rel.parts[:-1]):
                 key = str(Path(*rel.parts[:i + 1]))

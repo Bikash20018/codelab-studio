@@ -4,11 +4,11 @@ title Package CodeLab Studio as MSIX
 cd /d "%~dp0"
 
 rem   make_msix.bat [version] [testsign]
-rem     version   defaults to 2.0.0 - must match the dist\<version>\ folder
+rem     version   defaults to 2.1.0 - must match the dist\<version>\ folder
 rem               build.bat produced and the manifest's four-part Version.
 rem     testsign  OPTIONAL, local testing only - see section 6 at the bottom.
 
-set "VERSION=2.0.0"
+set "VERSION=2.1.0"
 set "TESTSIGN="
 for %%a in (%*) do (
   if /i "%%a"=="testsign" (set "TESTSIGN=1") else (set "VERSION=%%a")

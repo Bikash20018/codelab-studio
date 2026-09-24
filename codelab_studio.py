@@ -33,7 +33,7 @@ from studio_features import WorkspaceFeatures
 
 # ---- Branding --------------------------------------------------------------
 APP_NAME = "CodeLab Studio"
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.1.0"
 SUBTITLE = "C / C++ for Students"
 AUTHOR = "Bikash Chhetri"
 WEBSITE = "www.bikashchhetri.com.np"
@@ -52,27 +52,27 @@ SETTINGS_PATH = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~/.co
 #  Surface ramp is deliberately wide (5 steps): a dark UI with only one or two
 #  greys reads flat and cheap.  Text colours are checked against the surface they
 #  actually sit on - "muted" must stay >= 4.5:1 on "panel", not just on "bg".
-C = {
-    "bg": "#191b26",        # editor surface, and the selected tab, so they merge
-    "panel": "#20222f",     # action row, output panel, tab strip
-    "header": "#20222f",    # kept as an alias: dialogs still ask for it
-    "gutter": "#1d1f2b",
-    "console": "#14161f",   # deepest surface: output and inputs
-    "btn": "#272a39", "btn_hover": "#313548",
-    "border": "#2e3143",    # hairline separators, never a shadow or glow
-    "fg": "#e6e8f0", "muted": "#9ba1bb",
-    "accent": "#a78bff",        # accent as TEXT (passes AA on panel)
-    "accent_fill": "#6d4ff0",   # accent as a BUTTON FILL under white text
-    "accent_hover": "#7f63f5",
-    "go": "#0f9d76", "go_hover": "#12b083",     # fill under white text
-    "go_text": "#2dd4a7",                        # same family, for text/marks
-    "status": "#20222f",
-    "cursor": "#2dd4a7", "sel": "#33395c", "curline": "#20222d",
+DARK = {
+    "bg": "#17212f",        # blue slate keeps long coding sessions calm
+    "panel": "#101925",
+    "header": "#101925",
+    "gutter": "#151e2b",
+    "console": "#111a27",
+    "btn": "#243347", "btn_hover": "#30445d",
+    "border": "#2b3b50",
+    "fg": "#e4ecf6", "muted": "#9bacc2",
+    "accent": "#87bfff",
+    "accent_fill": "#2863ad", "accent_hover": "#3274c4",
+    "go": "#197455", "go_hover": "#208365",
+    "go_text": "#67d5b0",
+    "status": "#101925",
+    "cursor": "#87bfff", "sel": "#304763", "curline": "#202e40",
     "errline": "#2f2230", "warnline": "#2c2820", "find": "#f0b429",
     "danger": "#ff6b7a", "warn": "#f0b429", "ok": "#2dd4a7", "note": "#82aaff",
     "func": "#ffcb6b", "num": "#f78c6c", "kw": "#c792ea", "type": "#82aaff",
-    "pre": "#89ddff", "str": "#c3e88d", "com": "#767d9c",
+    "pre": "#89ddff", "str": "#c3e88d", "com": "#91a1b5",
 }
+C = dict(DARK)
 
 # ---- Syntax ---------------------------------------------------------------
 C_KEYWORDS = ("auto break case const continue default do else enum extern for goto if "
@@ -476,7 +476,7 @@ class Editor(tk.Frame):
         self._hl_job = None
         self._last_code = None
 
-        self.gutter = tk.Canvas(self, width=52, bg=C["gutter"], highlightthickness=0, bd=0)
+        self.gutter = tk.Canvas(self, width=app.px(52), bg=C["gutter"], highlightthickness=0, bd=0)
         self.text = t = tk.Text(
             self, wrap="none", undo=True, autoseparators=True, maxundo=-1, exportselection=False,
             bg=C["bg"], fg=C["fg"], insertbackground=C["cursor"], insertwidth=2,
@@ -664,6 +664,8 @@ class Editor(tk.Frame):
 
     # -- events
     def on_modified(self, _event=None):
+        if self.modified():
+            self.is_welcome = False
         self.app.refresh_tab(self)
         self.app.schedule_session()
         # Markers belong to the build that produced them.  Once the text changes they
@@ -1182,9 +1184,12 @@ class ExamplesDialog(tk.Toplevel):
 class App(WorkspaceFeatures):
     def __init__(self, root, files=(), settings_path=SETTINGS_PATH):
         self.root = root
+        # Tk scales point-sized fonts with monitor DPI; pane sizes are raw pixels.
+        # Scale those dimensions too, otherwise the packaged DPI-aware app clips them.
+        self.ui_scale = max(1.0, root.winfo_fpixels('1i') / 96.0)
         self.settings_path = settings_path
         self.settings = self.load_settings()
-        self.init_features(C, find_tool, resource)
+        self.init_features(C, find_tool, resource, DARK)
         self.recent_files = self.settings.get("recent_files", [])
         self.gcc, self.gpp = find_tool("gcc"), find_tool("g++")
         self.busy = False
@@ -1213,6 +1218,11 @@ class App(WorkspaceFeatures):
         self.console_font = tkfont.Font(root, family=mono, size=10)
 
         self.shortcuts = {
+            "<Control-p>": lambda: self.show_picker(files=True),
+            "<Control-Shift-P>": self.show_picker,
+            "<Control-Shift-F>": self.show_workspace_search,
+            "<Control-Shift-M>": self.toggle_focus_mode,
+            "<Control-Alt-s>": self.save_all,
             "<Control-n>": lambda: self.new_file_dialog(),
             "<Control-o>": self.open_file,
             "<Control-s>": self.save,
@@ -1246,6 +1256,7 @@ class App(WorkspaceFeatures):
         if not self.editors():
             self.new_file("c", WELCOME, "welcome.c").is_welcome = True
             self.show_welcome()
+        self.refresh_open_files()
         self._session_ready = True
         self.session_tick()
         self.out(f"{APP_NAME} {APP_VERSION} ready.  Press F11 to compile & run.\n", "info")
@@ -1316,6 +1327,10 @@ class App(WorkspaceFeatures):
 
     def set_busy(self, busy):
         self.busy = busy
+        if busy and getattr(self, 'focus_mode', False):
+            self.toggle_focus_mode()
+        self.job_badge.configure(text="Working…" if busy else "Ready",
+                                 fg=C["warn"] if busy else C["go_text"])
         for button in (self.run_button, self.compile_button):
             button.configure(state="disabled" if busy else "normal")
         self.stop_button.configure(state="normal" if busy else "disabled")
@@ -1350,11 +1365,16 @@ class App(WorkspaceFeatures):
             self._poll_job = self.root.after(40, self.poll_queue)
 
     # -- layout
+    def px(self, value):
+        return round(value * self.ui_scale)
+
     def build_window(self):
         r = self.root
         r.title(APP_NAME)
-        r.geometry("1240x800")
-        r.minsize(900, 560)
+        width = min(self.px(1240), r.winfo_screenwidth() - 40)
+        height = min(self.px(800), r.winfo_screenheight() - 80)
+        r.geometry(f'{width}x{height}')
+        r.minsize(min(self.px(940), width), min(self.px(650), height))
         r.configure(bg=C["bg"])
         self.set_icon()
         self.style_ttk()
@@ -1367,13 +1387,14 @@ class App(WorkspaceFeatures):
         self.file_context.pack(fill="x")
         self.build_searchbar()
 
-        paned = tk.PanedWindow(r, orient="vertical", bg=C["border"], sashwidth=4, bd=0, sashrelief="flat")
-        paned.pack(fill="both", expand=True)
-        workspace = self.build_workspace(paned)
-        self.nb = ttk.Notebook(workspace, style="Closable.TNotebook")
-        workspace.add(self.nb, stretch="always", minsize=350)
-        paned.add(workspace, stretch="always", minsize=220)
-        paned.add(self.build_output(paned), stretch="never", minsize=120, height=240)
+        workspace = self.build_workspace(r)
+        workspace.pack(fill="both", expand=True)
+        self.main_panes = paned = tk.PanedWindow(workspace, orient="vertical", bg=C["border"], sashwidth=5, bd=0, sashrelief="flat")
+        workspace.add(paned, stretch="always", minsize=self.px(350))
+        self.nb = ttk.Notebook(paned, style="Closable.TNotebook")
+        paned.add(self.nb, stretch="always", minsize=self.px(220))
+        self.output_panel = self.build_output(paned)
+        paned.add(self.output_panel, stretch="never", minsize=self.px(150), height=self.px(250))
         self.nb.bind("<<NotebookTabChanged>>", lambda e: self.on_tab_changed())
         self.nb.bind("<Button-2>", self.on_tab_middle_click)
         self.nb.bind("<ButtonPress-1>", self.on_tab_press, True)
@@ -1401,26 +1422,33 @@ class App(WorkspaceFeatures):
             self.make_closable_notebook(st)
         st.configure("Closable.TNotebook", background=C["panel"], borderwidth=0, tabmargins=(6, 3, 6, 0))
         st.configure("Closable.TNotebook.Tab", background=C["panel"], foreground=C["muted"],
-                     padding=(11, 5, 5, 5), borderwidth=0, font=(self.ui, 10),
+                     padding=(15, 9, 8, 9), borderwidth=0, font=(self.ui, 10),
                      bordercolor=C["panel"], lightcolor=C["panel"], darkcolor=C["panel"])
         st.map("Closable.TNotebook.Tab", background=[("selected", C["bg"])],
-               foreground=[("selected", C["fg"])])
-        st.configure("TNotebook", background=C["panel"], borderwidth=0)
+               foreground=[("selected", C["fg"])],
+               lightcolor=[('selected', C['bg']), ('!selected', C['panel'])],
+               padding=[('selected', (15, 9, 8, 9)), ('!selected', (15, 9, 8, 9))])
+        st.configure("TNotebook", background=C["panel"], borderwidth=0,
+                     bordercolor=C['panel'], lightcolor=C['panel'], darkcolor=C['panel'])
         st.configure("TNotebook.Tab", background=C["panel"], foreground=C["muted"],
-                     padding=(12, 5), font=(self.ui, 9), borderwidth=0)
+                     padding=(12, 7), font=(self.ui, 9), borderwidth=0,
+                     bordercolor=C['panel'], lightcolor=C['panel'], darkcolor=C['panel'])
         st.map("TNotebook.Tab", background=[("selected", C["console"])],
-               foreground=[("selected", C["accent"])])
+               foreground=[("selected", C["accent"])],
+               lightcolor=[('selected', C['console']), ('!selected', C['panel'])],
+               padding=[('selected', (12, 7)), ('!selected', (12, 7))])
         st.configure("Horizontal.TProgressbar", background=C["go"], troughcolor=C["panel"],
                      bordercolor=C["panel"], lightcolor=C["go"], darkcolor=C["go"], thickness=3)
         st.configure("TScrollbar", troughcolor=C["bg"], background=C["btn"], borderwidth=0,
-                     bordercolor=C["bg"], gripcount=0)
+                     bordercolor=C["bg"], lightcolor=C['bg'], darkcolor=C['bg'],
+                     arrowcolor=C['muted'], gripcount=0)
         st.map("TScrollbar", background=[("active", C["btn_hover"])])
         st.configure("TCheckbutton", background=C["panel"], foreground=C["muted"], font=(self.ui, 9),
                      indicatorbackground=C["console"], indicatorforeground=C["cursor"])
         st.map("TCheckbutton", background=[("active", C["panel"])],
                foreground=[("active", C["fg"])])
         st.configure("Examples.Treeview", background=C["console"], fieldbackground=C["console"],
-                     foreground=C["fg"], borderwidth=0, relief="flat", rowheight=27,
+                     foreground=C["fg"], borderwidth=0, relief="flat", rowheight=self.px(31),
                      bordercolor=C["console"], lightcolor=C["console"], darkcolor=C["console"],
                      font=(self.ui, 10))
         st.map("Examples.Treeview", background=[("selected", C["accent_fill"])],
@@ -1428,6 +1456,11 @@ class App(WorkspaceFeatures):
         st.configure("Examples.Treeview.Heading", background=C["panel"], foreground=C["muted"],
                      borderwidth=0, relief="flat", font=(self.ui, 8, "bold"), padding=(6, 6))
         st.map("Examples.Treeview.Heading", background=[("active", C["panel"])])
+        st.configure("TCombobox", fieldbackground=C["console"], background=C["btn"],
+                     foreground=C["fg"], arrowcolor=C["muted"], bordercolor=C["border"], padding=4)
+        st.map("TCombobox", fieldbackground=[("readonly", C["console"])],
+               foreground=[("readonly", C["fg"])], selectbackground=[("readonly", C["console"])],
+               selectforeground=[("readonly", C["fg"])])
 
     def make_closable_notebook(self, st):
         """Add an  x  to every notebook tab.  ttk has no such option, so the tab layout
@@ -1491,6 +1524,7 @@ class App(WorkspaceFeatures):
         self.refresh_recent_menu()
         f.add_separator()
         f.add_command(label="Save", accelerator="Ctrl+S", command=self.save)
+        f.add_command(label="Save All", accelerator="Ctrl+Alt+S", command=self.save_all)
         f.add_command(label="Save As...", accelerator="Ctrl+Shift+S", command=self.save_as)
         f.add_command(label="Close Tab", accelerator="Ctrl+W", command=self.close_tab)
         f.add_separator()
@@ -1513,6 +1547,7 @@ class App(WorkspaceFeatures):
         e.add_command(label="Find Next", accelerator="F3", command=self.find_next)
         e.add_command(label="Find Previous", accelerator="Shift+F3", command=lambda: self.find_next(backwards=True))
         e.add_command(label="Go to Line...", accelerator="Ctrl+G", command=self.goto_line)
+        e.add_command(label="Search Workspace...", accelerator="Ctrl+Shift+F", command=self.show_workspace_search)
         e.add_separator()
         e.add_command(label="Zoom In", accelerator="Ctrl++", command=lambda: self.zoom(1))
         e.add_command(label="Zoom Out", accelerator="Ctrl+-", command=lambda: self.zoom(-1))
@@ -1562,6 +1597,7 @@ class App(WorkspaceFeatures):
                                  "primary": ("accent_fill", "accent_hover"), "go": ("go", "go_hover")}[kind]
         b.bind("<Enter>", lambda e: b.configure(bg=C[hover_key]) if b.cget("state") != "disabled" else None)
         b.bind("<Leave>", lambda e: b.configure(bg=C[normal_key]))
+        b._button_kind = kind
         b.pack(side=side, padx=3, pady=5)
         return b
 
@@ -1569,40 +1605,27 @@ class App(WorkspaceFeatures):
         tk.Frame(parent, bg=C["border"], width=1, height=20).pack(side="left", padx=9)
 
     def build_toolbar(self):
-        """One action row for the whole app.
-
-        Editors give identity no permanent pixels: the file name goes in the OS
-        title bar and the credit goes in About, so the old 68px branded header
-        band is gone - about 80px of window handed back to the code.
-        """
-        tb = tk.Frame(self.root, bg=C["panel"])
+        """A compact command bar; learning and file navigation live in the sidebar."""
+        tb = tk.Frame(self.root, bg=C["panel"], padx=10, pady=5)
         tb.pack(fill="x")
-
-        logo = tk.Canvas(tb, width=20, height=20, bg=C["panel"], highlightthickness=0, cursor="hand2")
-        draw_logo(logo, 20)
-        logo.pack(side="left", padx=(12, 10))
-        logo.bind("<ButtonRelease-1>", lambda e: self.show_about())
-
-        self.button(tb, "New", self.new_file_dialog)
-        self.button(tb, "Open", self.open_file)
-        self.button(tb, "Save", self.save)
-        self.separator(tb)
-        self.run_button = self.button(tb, "▶  Run   F11", self.compile_and_run, "go")
-        self.compile_button = self.button(tb, "Build  F9", self.compile, "quiet")
-        self.stop_button = self.button(tb, "■  Stop", self.stop, "quiet")
+        left = tk.Frame(tb, bg=C["panel"])
+        left.pack(side='left')
+        self.button(left, 'CodeLab', self.show_welcome, 'quiet').configure(font=(self.ui, 13, 'bold'), fg=C['fg'])
+        self.separator(left)
+        self.button(left, 'New', self.new_file_dialog, 'quiet')
+        self.button(left, 'Open', self.open_file, 'quiet')
+        self.button(left, 'Save', self.save, 'quiet')
+        right = tk.Frame(tb, bg=C["panel"])
+        right.pack(side='right')
+        self.compile_button = self.button(right, "Build  F9", self.compile, "quiet")
+        self.run_button = self.button(right, "▶  Run  F11", self.compile_and_run, "go")
+        self.stop_button = self.button(right, "■", self.stop, "quiet")
         self.stop_button.configure(state="disabled")
-        self.separator(tb)
-        self.button(tb, "Format", self.format_current, "quiet")
-        self.button(tb, "Practice", self.show_practice, "quiet")
-        self.button(tb, "Check solution", self.check_practice, "quiet")
-        self.button(tb, "Examples", self.show_examples, "quiet")
-        ex = self.button(tb, "▾", lambda: None, "quiet")
-        ex.configure(command=lambda: self.examples_menu.tk_popup(
-            ex.winfo_rootx(), ex.winfo_rooty() + ex.winfo_height()))
-
-        tk.Frame(tb, bg=C["panel"], width=6).pack(side="right")
-        self.button(tb, "A+", lambda: self.zoom(1), "quiet", side="right")
-        self.button(tb, "A−", lambda: self.zoom(-1), "quiet", side="right")
+        center = tk.Frame(tb, bg=C['panel'])
+        center.pack(fill='x', expand=True, padx=16)
+        command = self.button(center, 'Search commands   Ctrl+Shift+P', self.show_picker)
+        command.pack_configure(fill='x', expand=True)
+        command.configure(anchor='w', fg=C['muted'])
         tk.Frame(self.root, bg=C["border"], height=1).pack(fill="x")
 
 
@@ -1611,6 +1634,8 @@ class App(WorkspaceFeatures):
         head = tk.Frame(wrap, bg=C["panel"])
         head.pack(fill="x")
         tk.Label(head, text="Build & run", bg=C["panel"], fg=C["fg"], font=(self.ui, 10, "bold")).pack(side="left", padx=14, pady=6)
+        self.job_badge = tk.Label(head, text='Ready', bg=C['panel'], fg=C['go_text'], font=(self.ui, 9))
+        self.job_badge.pack(side='left', padx=5)
         self.progress = ttk.Progressbar(head, mode="indeterminate", length=80)
         self.progress.pack(side="left", padx=8, ipady=0)
         self.button(head, "Clear", self.clear_output, "quiet", side="right")
@@ -1636,7 +1661,7 @@ class App(WorkspaceFeatures):
         self.output_tabs.add(self.problems, text="  Problems (0)  ")
         inbox = tk.Frame(body, bg=C["panel"])
         inbox.pack(side="right", fill="y")
-        tk.Label(inbox, text="Preloaded input (also used by debugger)", bg=C["panel"], fg=C["muted"], font=(self.ui, 8)).pack(anchor="w", padx=4)
+        tk.Label(inbox, text="Test input • sent when the program starts", bg=C["panel"], fg=C["muted"], font=(self.ui, 8)).pack(anchor="w", padx=4)
         self.stdin_box = tk.Text(inbox, width=26, height=6, bg=C["console"], fg=C["fg"], insertbackground=C["cursor"],
                                  font=self.console_font, relief="flat", bd=0, padx=8, pady=6, highlightthickness=0)
         self.stdin_box.pack(fill="both", expand=True, padx=(4, 10), pady=(2, 10))
@@ -1739,6 +1764,7 @@ class App(WorkspaceFeatures):
         self.nb.tab(ed, text=("\u25CF " if ed.modified() else "") + ed.display_name() + " ")
         if ed is self.current():
             self.root.title(f"{ed.display_name()}  -  {APP_NAME}")
+        self.refresh_open_files()
 
     def on_tab_changed(self):
         for other in self.editors():
@@ -1969,6 +1995,7 @@ class App(WorkspaceFeatures):
             return False
         self.nb.forget(ed)
         ed.destroy()
+        self.refresh_open_files()
         if not self.editors():
             self.new_file(self.default_lang)
         self.save_session()
@@ -2509,6 +2536,9 @@ class App(WorkspaceFeatures):
         messagebox.showinfo("Keyboard Shortcuts", "\n".join([
             "F9\tCompile", "F10\tRun", "F11\tCompile & Run", "Shift+F5\tStop build / panel run", "",
             "Ctrl+E\tBrowse example programs",
+            "Ctrl+Shift+P\tCommand palette", "Ctrl+P\tQuick open file",
+            "Ctrl+Shift+F\tSearch workspace", "Ctrl+Shift+M\tToggle focus mode",
+            "Ctrl+Alt+S\tSave all programs", "Ctrl+Shift+I\tFormat code",
             "Ctrl+Space\tSuggest a word", "Tab\tAccept suggestion; arrows then Enter to choose",
             "Ctrl+W\tClose the current tab (or click the x on it)", "",
             "Ctrl+N\tNew file", "Ctrl+O\tOpen", "Ctrl+S\tSave", "Ctrl+Shift+S\tSave As", "Ctrl+W\tClose tab", "",

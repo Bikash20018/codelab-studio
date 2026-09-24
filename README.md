@@ -6,6 +6,28 @@ need nothing else installed.
 
 Developed by **Bikash Chhetri** — [www.bikashchhetri.com.np](https://www.bikashchhetri.com.np)
 
+## What's new in 2.1.0
+
+- **A clearer workspace:** blue-slate dark and crisp light themes, a compact command
+  bar, persistent open programs and project navigation, visible learning tools,
+  a redesigned welcome screen, and clearer build status.
+- **Command palette (Ctrl+Shift+P):** search actions by name, see their shortcuts,
+  and run them with Enter. Build commands adapt to whether a job is running.
+- **Quick open (Ctrl+P):** filter open programs and project sources by file name or
+  path, including unnamed programs, without opening duplicate tabs.
+- **Workspace search (Ctrl+Shift+F):** find text across C/C++ sources and headers,
+  with match-case and whole-word options. Results include unsaved editor contents
+  and open at the exact match. Changed files require a fresh search before jumping.
+  Search runs in the background, can be cancelled, skips unreadable/binary files
+  and files over 2 MB, and displays at most 1,000 matches. Use Project > Refresh Files
+  after adding files outside the app. Without a project it searches open programs.
+- **Focus mode (Ctrl+Shift+M):** hide the sidebar and output, then restore their
+  sizes. Starting a build restores the output automatically.
+- **Save all (Ctrl+Alt+S):** save edited and unnamed programs together; cancelling
+  a save stops the operation and keeps the remaining buffers intact.
+- **Reliability:** edited welcome programs are included in recovery and navigation;
+  theme switching keeps button contrast and correctly restores the dark palette.
+
 ## What's new in 2.0.0
 
 - **Crash recovery:** every save is atomic (a failed write never truncates your file),
@@ -55,11 +77,11 @@ Developed by **Bikash Chhetri** — [www.bikashchhetri.com.np](https://www.bikas
   UTF-8 BOM files open correctly; Save As updates the correct tab's language.
 
 Run the source with `python codelab_studio.py`. The packaged release is
-`dist/2.0.0/CodeLabStudio/CodeLabStudio.exe`; keep its whole folder together.
-The previous release stays in `dist/1.4.0/`.
+`dist/2.1.0/CodeLabStudio/CodeLabStudio.exe`; keep its whole folder together.
+Previous releases remain in their versioned folders.
 
 Validation: `python -m unittest -v test_studio test_upgrade test_execution_live
-test_debugger test_formatting test_learning test_projects` runs the regression,
+test_debugger test_formatting test_learning test_projects test_workbench` runs the regression,
 recovery, streaming-execution, GDB, formatting, exercise and multi-file build
 tests. `python test_examples.py` checks all 81 examples plus editor and
 example-browser behavior. GCC/G++, GDB, clang-format and a working Tk display are
@@ -71,7 +93,7 @@ programs run in their own console window (so `scanf`/`cin` work) or inside the
 Output panel with a live INPUT box, streaming output and an editable time limit
 (120 seconds by default) · click an error to jump to its line ·
 **New asks for the program name** (validated for Windows) instead of
-piling up untitled buffers · **one action row** instead of a branded banner, with
+piling up untitled buffers · **a compact command bar and workspace sidebar**, with
 the file name in the title bar and the language switch in the status bar ·
 **red wavy underlines on errors** (amber for warnings) like VS Code ·
 plain-English tips for common mistakes · friendly crash messages (divide by zero,
@@ -96,6 +118,8 @@ C++ basics · C++ classes & objects · C++ STL.
 CodeLabStudio/
 ├── codelab_studio.py     the app
 ├── studio_features.py    workspace UI: recovery, project, debug, practice, themes
+├── workbench.py          command actions, navigation, save all and focus mode
+├── navigation.py         file/command pickers and cancellable workspace search
 ├── recovery.py           atomic saves and the session snapshot file
 ├── execution.py          streaming stdout/stderr with line-by-line stdin
 ├── debugger.py           GDB machine-interface backend
@@ -131,7 +155,7 @@ CodeLabStudio/
 ## Make a real installer (optional)
 
 Install **Inno Setup 6.3+** (jrsoftware.org), open `installer.iss`, press **Compile**.
-You get `installer\CodeLabStudio-Setup-2.0.0.exe` with Start-menu/desktop shortcuts,
+You get `installer\CodeLabStudio-Setup-2.1.0.exe` with Start-menu/desktop shortcuts,
 an uninstaller, and optional "Open with" for .c/.cpp files.
 
 ## Publish to the Microsoft Store
@@ -159,7 +183,7 @@ Mentioning it in the description is fine, and is in fact required (see step 8).
 strings. Paste them into `packaging\AppxManifest.xml` exactly, including case and
 punctuation: `Package/Identity/Name`, `Package/Identity/Publisher` (the whole `CN=...`
 string) and `Package/Properties/PublisherDisplayName`. Upload fails if any of them differ
-by a character. Leave `Version="2.0.0.0"` alone: an MSIX version is always **four** parts
+by a character. Leave `Version="2.1.0.0"` alone: an MSIX version is always **four** parts
 and the fourth is reserved for the Store — a non-zero fourth part is rejected at upload.
 Bump the third part for a rebuild (2.0.1.0), the second for a feature release (2.1.0.0).
 Every submission must be strictly higher than the last one that was accepted, including
@@ -178,7 +202,7 @@ toolchain parts the IDE never runs, then **proves the pruned toolchain still wor
 it compiles, links, runs and GDB-debugs a real program and refuses to pack if any of that
 fails. Finally it runs `makepri.exe` (the scale and target-size icons are inert without
 `resources.pri`; indexing the toolchain is slow but harmless) and packs
-`installer\CodeLabStudio-2.0.0.0-x64.msix`.
+`installer\CodeLabStudio-2.1.0.0-x64.msix`.
 
 **6. Test-sign and install it locally.** This step only proves the package installs and
 runs; the certificate never leaves your machine.
@@ -193,7 +217,7 @@ powershell -Command "New-SelfSignedCertificate -Type Custom -KeyUsage DigitalSig
 The certificate's Subject must equal the manifest's `Publisher` exactly. Export it to a
 `.pfx`, import that into `Cert:\LocalMachine\TrustedPeople` from an **elevated**
 PowerShell, sign the package with `signtool sign /fd SHA256 ...`, then
-`Add-AppxPackage -Path installer\CodeLabStudio-2.0.0.0-x64.msix`. Re-sign after every
+`Add-AppxPackage -Path installer\CodeLabStudio-2.1.0.0-x64.msix`. Re-sign after every
 repack. Smoke test: app launches, compile and run a `hello.c` saved in Documents, run in a
 separate console, F5 into GDB, Ctrl+Shift+I formats, and a double-clicked `.c` file opens
 in CodeLab Studio via *Open with*. Then run the Windows App Certification Kit
@@ -281,7 +305,7 @@ flags the IDE uses and fails on any warning.
 ## Notes
 
 - **SmartScreen:** a Store-installed package is signed by Microsoft, so students see no
-  warning at all. The warning is only about the side-loaded `CodeLabStudio-Setup-2.0.0.exe`
+  warning at all. The warning is only about the side-loaded `CodeLabStudio-Setup-2.1.0.exe`
   and about an .msix you test-signed yourself — click *More info → Run anyway*, or sign
   the installer with a code-signing certificate.
 - **Antivirus:** some tools flag PyInstaller apps by mistake; the `--onedir` build used

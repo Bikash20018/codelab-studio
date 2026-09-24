@@ -2,7 +2,7 @@
 ; Run build.bat first so dist\CodeLabStudio exists (with mingw64 inside).
 
 #define AppName "CodeLab Studio"
-#define AppVersion "2.0.0"
+#define AppVersion "2.1.0"
 #define AppExe "CodeLabStudio.exe"
 #ifndef SourceDir
   #define SourceDir "dist\CodeLabStudio"
@@ -21,7 +21,7 @@ UninstallDisplayIcon={app}\{#AppExe}
 OutputDir=installer
 OutputBaseFilename=CodeLabStudio-Setup-{#AppVersion}
 SetupIconFile=assets\app.ico
-Compression=lzma2/ultra64
+Compression=lzma2/fast
 SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
